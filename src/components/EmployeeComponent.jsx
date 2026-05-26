@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { createEmployee } from '../services/EmployeeService';
+import { useState,useEffect } from 'react'
+import { createEmployee, updateEmployee } from '../services/EmployeeService';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getEmployee } from '../services/EmployeeService';
 
 const EmployeeComponent = () => {
 
@@ -16,19 +17,45 @@ const EmployeeComponent = () => {
         const {id} = useParams();
     const navigator = useNavigate();
 
-    function saveEmployee(e) {
+    useEffect(() => {
+        if(id){
+            getEmployee(id).then((Response) => {
+                setFirstName(Response.data.firstName);
+                setLastName(Response.data.lastName);
+                setEmail(Response.data.email);
+            }).catch((error) => {
+                console.error(error);
+            })  
+        }
+    }, [id])
+
+    function saveOrUpdateEmployee(e) {
         e.preventDefault();
 
         if(validateForm()) {
-            const employee = {firstName, lastName, email};
+
+             const employee = {firstName, lastName, email};
         console.log(employee);
 
-        createEmployee(employee).then((Response)=>{
+            if(id){
+                updateEmployee(id, employee).then((Response) => {
+                    console.log(Response.data);
+                    navigator("/employees");
+                }).catch((error) => {
+                    console.error(error);
+                })
+            } else {
+
+            createEmployee(employee).then((Response)=>{
             console.log(Response.data);
             navigator("/employees");
-        }) 
-        }
+        }).catch((error) => {
+            console.error(error);       
+        })
+            }
     }
+}
+           
 
     function validateForm() {
         let valid = true;
@@ -54,7 +81,7 @@ const EmployeeComponent = () => {
             errorsCopy.email = "Email is required";
             valid = false;
         }
-
+         
         setErrors(errorsCopy);
         return valid;
     }
@@ -111,7 +138,7 @@ const EmployeeComponent = () => {
                             />      
                             {errors.email && <div className='invalid-feedback'>{errors.email}</div>}
                         </div>
-                        <button className='btn btn-success' onClick={saveEmployee} type='submit'>Submit</button>
+                        <button className='btn btn-success' onClick={saveOrUpdateEmployee} type='submit'>Submit</button>
                     </form>
                 </div>
             </div>
